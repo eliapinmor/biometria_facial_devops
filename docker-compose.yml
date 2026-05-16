@@ -1,0 +1,79 @@
+version: '3.8'
+services:
+  facial-api:
+    build: ./faceid-service
+    container_name: facial_service
+    # ports:
+    #   - "8181:5000" # Mapeo externo 8181 -> interno 5000 
+    expose:
+      - "5000"
+    restart: always
+    networks:
+      - biometria_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    cap_drop:
+      - ALL  # Quitamos TODOS los privilegios de root de Linux
+    cap_add:
+      - CHOWN # Solo permitimos cambiar el dueño de archivos si es necesario
+      - SETGID # Permite gestionar IDs de grupo
+      - SETUID # Permite gestionar IDs de usuario
+    security_opt:
+      - no-new-privileges:true
+
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80" # Usamos el 8080 para evitar conflictos en el centro
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/config:/data
+      - ./logs:/var/log/caddy
+    networks:
+      - biometria_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - facial-api
+
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    ports:
+      - "5433:5432" # Puerto 5433 para evitar conflictos 
+    environment:
+      POSTGRES_DB: plataforma_juegos
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secretpassword
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+     - biometria_net
+
+
+  jenkins:
+    image: jenkins/jenkins:lts-jdk21
+    container_name: jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+
+networks:
+  biometria_net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  jenkins_home:
+
