@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-
+<meta http-equiv="Content-Security-Policy" content="img-src 'self' https://ik.imagekit.io data:;">
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
@@ -18,7 +18,9 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>
                 <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+                    <img src="https://ik.imagekit.io/8btddb37v/photo-1689308271305-58e75832289b.avif?tr=w-400,c-maintain_ratio,f-webp,q-80"
+                        alt="Imagen de Reconocimiento Facial Optimizada"
+                        style="width: 100%; max-width: 400px; height: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
                 </a>
             </div>
 
