@@ -1,0 +1,45 @@
+name: Laravel Blade CI
+
+# El workflow se activará cada vez que hagas un push o un Pull Request a la rama 'main'
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Descargar el código del repositorio en la máquina virtual de GitHub
+    - name: Descargar código
+      uses: actions/checkout@v4
+
+    # 2. Configurar la versión correcta de PHP (usaremos la 8.2 que tiene tu servidor)
+    - name: Configurar PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, iconv, json, pdo, pdo_pgsql
+        coverage: none
+
+    # 3. Copiar el archivo de entorno de pruebas de Laravel
+    - name: Copiar archivo .env de pruebas
+      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+    # 4. Cachear e Instalar las dependencias de Composer para que vaya rápido
+    - name: Instalar dependencias de Composer
+      run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+    # 5. Generar la clave de encriptación de Laravel requerida para arrancar
+    - name: Generar Application Key
+      run: php artisan key:generate
+
+    # 6. Comprobar la sintaxis de todos los archivos PHP antes de pasar los tests
+    - name: Validar sintaxis PHP (Lint)
+      run: find . -name "*.php" -not -path "./vendor/*" -exec php -l {} \;
+
+    # 7. Ejecutar la suite de tests unitarios y de integración de Laravel
+    - name: Ejecutar Tests
+      run: php artisan test
